@@ -1,0 +1,497 @@
+基本配置
+--host: 指定服务器的主机名。
+--port: 指定服务器的端口号，默认为8000。
+--uvicorn-log-level: 设置uvicorn的日志级别，可选值包括：debug, info, warning, error, critical, trace，默认为info。
+
+CORS 配置
+--allow-credentials: 是否允许凭据，默认为False。
+--allowed-origins: 允许的源，默认为['*']，表示允许所有源。
+--allowed-methods: 允许的方法，默认为['*']，表示允许所有方法。
+--allowed-headers: 允许的头部，默认为['*']，表示允许所有头部。
+
+安全配置
+--api-key: 如果提供，服务器将要求在请求头中包含此密钥。
+--ssl-keyfile: 指定SSL密钥文件的路径。
+--ssl-certfile: 指定SSL证书文件的路径。
+--ssl-ca-certs: 指定CA证书文件的路径。
+--ssl-cert-reqs: 是否需要客户端证书，默认为0（不强制要求）。
+
+路径配置
+--root-path: 当应用程序位于基于路径的路由代理后面时，指定FastAPI的根路径。
+
+中间件配置
+--middleware: 可以添加额外的ASGI中间件。接受多个--middleware参数。值应为导入路径。如果提供的是函数，vLLM将使用@app.middleware('http')将其添加到服务器；如果提供的是类，vLLM将使用app.add_middleware()将其添加到服务器。默认为空列表。
+
+其他配置
+-return-tokens-as-token-ids: 当指定了--max-logprobs时，将单个标记表示为形式为token_id:{token_id}的字符串，以便识别不可JSON编码的标记。默认为False。
+--disable-frontend-multiprocessing: 如果指定，将在与模型服务引擎相同的进程中运行OpenAI前端服务器。默认为False。
+--enable-request-id-headers: 如果指定，API服务器将在响应中添加X-Request-Id头部。注意：这会降低高QPS下的性能。默认为False。
+
+功能启用
+--enable-auto-tool-choice: 为支持的模型启用自动工具选择。使用--tool-call-parser指定要使用的解析器。默认为False。
+--enable-reasoning: 启用模型的推理内容生成功能。如果启用，模型将能够生成推理内容。默认为False。
+
+解析器配置
+--reasoning-parser: 根据使用的模型选择推理解析器。这是用于将推理内容解析为OpenAI API格式的解析器。如果启用了--enable-reasoning，则必须指定此参数。
+--tool-call-parser: 根据使用的模型选择工具调用解析器。这是用于将模型生成的工具调用解析为OpenAI API格式的解析器。如果启用了--enable-auto-tool-choice，则必须指定此参数。
+--tool-parser-plugin: 指定用于解析模型生成的工具的特殊解析器插件。在此插件中注册的名称可以在--tool-call-parser中使用。默认为空字符串。
+模型配置
+--model: 使用的huggingface模型的名称或路径，默认为facebook/opt-125m。
+--task: 指定模型的任务，可选值包括：auto, generate, embedding, embed, classify, score, reward。每个vLLM实例只支持一个任务，即使同一模型可以用于多个任务。当模型仅支持一个任务时，可以使用auto来选择它；否则，必须显式指定要使用哪个任务。默认为auto。
+--tokenizer: 使用的huggingface分词器的名称或路径。如果未指定，将使用模型的名称或路径。
+--skip-tokenizer-init: 跳过分词器和去分词器的初始化，默认为False。
+--revision: 使用的特定模型版本。可以是分支名称、标签名称或提交ID。如果未指定，将使用默认版本。
+--code-revision: 使用Hugging Face Hub上的特定模型代码版本。可以是分支名称、标签名称或提交ID。如果未指定，将使用默认版本。
+--tokenizer-revision: 使用的huggingface分词器的特定版本。可以是分支名称、标签名称或提交ID。如果未指定，将使用默认版本。
+--tokenizer-mode: 分词器模式，可选值包括：auto, slow, mistral。默认为auto，表示如果有快速分词器可用，则使用快速分词器，否则使用慢速分词器。
+
+远程代码信任
+--trust-remote-code: 是否信任来自huggingface的远程代码，默认为False。
+
+本地媒体访问
+--allowed-local-media-path: 允许API请求从服务器文件系统中指定的目录读取本地图像或视频。这是一个安全风险，应在受信任的环境中启用。
+
+下载和加载配置
+--download-dir: 下载和加载权重的目录，默认为huggingface的默认缓存目录。
+--load-format: 加载模型权重的格式，可选值包括：auto, pt, safetensors, npcache, dummy, tensorizer, sharded_state, gguf, bitsandbytes, mistral, runai_streamer。默认为auto，表示尝试以safetensors格式加载权重，如果不可用则回退到pytorch bin格式。
+
+模型配置格式
+--config-format: 指定要加载的模型配置格式。
+  auto: 尝试以HF格式加载配置，如果不可用则尝试以Mistral格式加载。
+  hf: 以Hugging Face格式加载配置。
+  mistral: 以Mistral格式加载配置。
+  - **默认值**: ConfigFormat.AUTO
+
+数据类型
+--dtype: 指定模型权重和激活的数据类型。
+  auto: 自动选择数据类型。对于FP32和FP16模型使用FP16精度，对于BF16模型使用BF16精度。
+  half 或 float16: 使用FP16精度。推荐用于AWQ量化。
+  bfloat16: 在精度和范围之间取得平衡。
+  float 或 float32: 使用FP32精度。
+  - **默认值**: auto
+
+缓存数据类型
+--kv-cache-dtype: 指定KV缓存存储的数据类型。
+  auto: 使用模型的数据类型。
+  fp8: CUDA 11.8+ 支持的FP8格式（等同于fp8_e4m3）。
+  fp8_e5m2: 特定的FP8格式。
+  fp8_e4m3: 特定的FP8格式。
+  - **默认值**: auto
+
+最大模型长度
+--max-model-len: 模型的上下文长度。如果不指定，将从模型配置中自动推导。
+
+引导解码后端
+--guided-decoding-backend: 指定用于引导解码（如JSON模式/正则表达式等）的引擎。
+  outlines: 使用outlines-dev/outlines引擎。
+  lm-format-enforcer: 使用noamgat/lm-format-enforcer引擎。
+  xgrammar: 使用mlc-ai/xgrammar引擎。
+  - **默认值**: xgrammar
+  - **备注**: 可以通过请求中的guided_decoding_backend参数覆盖此设置。
+
+Logits处理器模式
+--logits-processor-pattern: 可选的正则表达式模式，指定有效的Logits处理器合格名称，可以通过logits_processors额外完成参数传递。默认为None，表示不允许任何处理器。
+
+模型实现
+--model-impl: 指定要使用的模型实现。
+  auto: 尝试使用vLLM实现，如果不可用则回退到Transformers实现。
+  vllm: 使用vLLM模型实现。
+transformers: 使用Transformers模型实现。
+  - **默认值**: auto
+
+分布式执行后端
+--distributed-executor-backend: 指定用于分布式模型工作者的后端。
+  ray: 使用Ray作为后端。
+  mp: 使用多进程（multiprocessing）作为后端。
+  uni: 使用统一的后端。
+  external_launcher: 使用外部启动器。
+  - **默认值**: 如果pipeline_parallel_size和tensor_parallel_size的乘积小于或等于可用的GPU数量，则使用mp。否则，如果安装了Ray，则默认使用ray，否则会失败。注意：TPU仅支持Ray进行分布式推理。
+
+管道并行阶段数
+--pipeline-parallel-size, -pp: 管道并行阶段的数量。
+  - **默认值**: 1
+
+张量并行副本数
+--tensor-parallel-size, -tp: 张量并行副本的数量。
+  - **默认值**: 1
+
+最大并行加载工作线程数
+--max-parallel-loading-workers: 以多个批次顺序加载模型，以避免在使用张量并行和大型模型时RAM溢出。
+
+使用NVIDIA Nsight进行Ray工作线程分析
+--ray-workers-use-nsight: 如果指定，使用NVIDIA Nsight对Ray工作线程进行分析。
+  - **默认值**: False
+
+Token块大小
+--block-size: 连续Token块的大小。
+  - **可能的选择**: 8, 16, 32, 64, 128
+  - **默认值**: 根据设备不同而变化：
+    - **Neuron设备**: 忽略此选项，设置为--max-model-len。
+    - **CUDA设备**: 支持的最大块大小为32。
+    - **HPU设备**: 默认块大小为128。
+
+前缀缓存
+--enable-prefix-caching, --no-enable-prefix-caching: 启用自动前缀缓存。
+  - **默认值**: True
+  - **备注**: 使用--no-enable-prefix-caching显式禁用前缀缓存。
+
+禁用滑动窗口
+--disable-sliding-window: 禁用滑动窗口，限制为滑动窗口大小。
+  - **默认值**: False
+使用V2块管理器
+--use-v2-block-manager: [已弃用] 块管理器v1已被移除，SelfAttnBlockSpaceManager（即块管理器v2）现在是默认值。设置此标志为True或False对vLLM行为没有影响。
+  - **默认值**: True
+
+预测槽位数
+--num-lookahead-slots: 实验性的调度配置，用于推测解码。未来将被推测配置替换，目前存在是为了启用正确性测试。
+  - **默认值**: 0
+
+随机种子
+--seed: 用于操作的随机种子。
+  - **默认值**: 0
+
+CPU交换空间
+--swap-space: 每个GPU的CPU交换空间大小（以GiB为单位）。
+  - **默认值**: 4
+
+CPU卸载
+--cpu-offload-gb: 每个GPU的CPU卸载空间大小（以GiB为单位）。默认值为0，表示不卸载。直观上，这个参数可以被视为增加GPU内存大小的一种虚拟方式。例如，如果你有一个24 GB的GPU，并且将此参数设置为10，那么你可以认为虚拟的GPU内存大小为34 GB，从而可以加载需要至少26 GB GPU内存的13B模型。需要注意的是，这要求有快速的CPU-GPU互连，因为模型的部分内容会在每次前向传播时从CPU内存加载到GPU内存。
+  - **默认值**: 0
+
+GPU内存利用率
+--gpu-memory-utilization: 模型执行器使用的GPU内存比例，范围从0到1。例如，0.5表示50%的GPU内存利用率。如果未指定，默认值为0.9。这是一个每实例的限制，只适用于当前的vLLM实例。即使在同一GPU上运行多个vLLM实例，也不会相互影响。
+  - **默认值**: 0.9
+覆盖GPU块数
+--num-gpu-blocks-override: 如果指定，忽略GPU性能分析结果并使用此数量的GPU块。用于测试抢占。
+  - **默认值**: 未指定
+
+每次迭代的最大批处理Token数
+--max-num-batched-tokens: 每次迭代的最大批处理Token数。
+  - **默认值**: 未指定
+
+每次迭代的最大序列数
+--max-num-seqs: 每次迭代的最大序列数。
+  - **默认值**: 未指定
+
+返回的最大对数概率数
+--max-logprobs: 返回的最大对数概率数。在SamplingParams中指定。
+  - **默认值**: 20
+
+禁用日志统计
+--disable-log-stats: 禁用日志统计。
+  - **默认值**: False
+
+权重量化方法
+--quantization, -q: 用于权重量化的量化方法。
+  - **可能的选择**: aqlm, awq, deepspeedfp, tpu_int8, fp8, fbgemm_fp8, modelopt, marlin, gguf, gptq_marlin_24, gptq_marlin, awq_marlin, gptq, compressed-tensors, bitsandbytes, qqq, hqq, experts_int8, neuron_quant, ipex, quark, moe_wna16, None
+  - **默认值**: None
+  - **备注**: 如果未指定，首先检查模型配置文件中的quantization_config属性。如果该属性也为None，则假定模型权重未量化，并使用dtype确定权重的数据类型。
+
+RoPE缩放配置
+--rope-scaling: RoPE缩放配置，以JSON格式提供。例如：{"rope_type":"dynamic","factor":2.0}
+  - **默认值**: 未指定
+
+RoPE theta
+--rope-theta: RoPE theta值。与rope-scaling一起使用。在某些情况下，更改RoPE theta可以提高缩放模型的性能。
+  - **默认值**: 未指定
+
+HuggingFace配置覆盖
+--hf-overrides: 用于HuggingFace配置的额外参数。应为JSON字符串，解析成字典。
+  - **默认值**: 未指定
+
+强制使用急切模式
+--enforce-eager: 始终使用PyTorch的急切模式。如果为False，将在混合模式下使用急切模式和CUDA图以获得最大性能和灵活性。
+  - **默认值**: False
+
+每个提示的最大序列长度
+--max-seq-len-to-capture: CUDA图覆盖的最大序列长度。当序列的上下文长度大于此值时，回退到急切模式。对于编码器-解码器模型，如果编码器输入的序列长度大于此值，也会回退到急切模式。
+  - **默认值**: 8192
+
+禁用自定义All-Reduce
+--disable-custom-all-reduce: 见ParallelConfig。
+  - **默认值**: False
+
+Tokenizer池大小
+--tokenizer-pool-size: 用于异步分词的Tokenizer池大小。如果为0，将使用同步分词。
+  - **默认值**: 0
+
+Tokenizer池类型
+--tokenizer-pool-type: 用于异步分词的Tokenizer池类型。如果tokenizer_pool_size为0，此选项将被忽略。
+  - **默认值**: ray
+
+Tokenizer池额外配置
+--tokenizer-pool-extra-config: 用于Tokenizer池的额外配置。应为JSON字符串，解析成字典。如果tokenizer_pool_size为0，此选项将被忽略。
+  - **默认值**: 未指定
+
+每个提示的多模态输入限制
+--limit-mm-per-prompt: 对每个多模态插件，限制每个提示允许的输入实例数。期望一个逗号分隔的列表，例如：image=16,video=2允许每个提示最多16张图片和2段视频。默认每个模态为1。
+  - **默认值**: 未指定
+
+多模态输入映射/处理覆盖
+--mm-processor-kwargs: 用于多模态输入映射/处理的覆盖配置，例如图像处理器。例如：{"num_crops": 4}。
+  - **默认值**: 未指定
+
+禁用多模态预处理器缓存
+--disable-mm-preprocessor-cache: 如果为True，禁用多模态预处理器/映射器的缓存（不推荐）。
+  - **默认值**: False
+
+启用LoRA适配器
+--enable-lora: 如果为True，启用LoRA适配器的处理。
+  - **默认值**: False
+
+LoRA适配器相关配置
+
+--enable-lora-bias
+  - **描述**: 如果为True，启用LoRA适配器的偏差项。
+  - **默认值**: False
+
+--max-loras
+  - **描述**: 单个批次中允许的最大LoRA适配器数量。
+  - **默认值**: 1
+
+--max-lora-rank
+  - **描述**: 最大LoRA秩。
+  - **默认值**: 16
+
+--lora-extra-vocab-size
+  - **描述**: LoRA适配器中额外词汇的最大大小（添加到基础模型词汇中）。
+  - **默认值**: 256
+
+--lora-dtype
+  - **描述**: LoRA适配器的数据类型。如果为auto，将默认使用基础模型的数据类型。
+  - **可能的选择**: auto, float16, bfloat16
+  - **默认值**: auto
+
+--long-lora-scaling-factors
+  - **描述**: 指定多个缩放因子（可以不同于基础模型的缩放因子），以便同时使用多个训练有不同缩放因子的LoRA适配器。
+  - **默认值**: 未指定
+
+--max-cpu-loras
+  - **描述**: 在CPU内存中存储的最大LoRA适配器数量。必须大于等于max_loras。默认值为max_loras。
+  - **默认值**: 未指定
+
+--fully-sharded-loras
+  - **描述**: 默认情况下，只有LoRA计算的一半是使用张量并行分片的。启用此选项后，将使用完全分片的层。在高序列长度、最大秩或张量并行大小时，这可能会更快。
+  - **默认值**: False
+
+Prompt适配器相关配置
+
+--enable-prompt-adapter
+  - **描述**: 如果为True，启用Prompt适配器的处理。
+  - **默认值**: False
+
+--max-prompt-adapters
+  - **描述**: 单个批次中允许的最大Prompt适配器数量。
+  - **默认值**: 1
+
+--max-prompt-adapter-token
+  - **描述**: 允许的最大Prompt适配器Token数。
+  - **默认值**: 0
+
+设备相关配置
+
+--device
+  - **描述**: vLLM执行的设备类型。
+  - **可能的选择**: auto, cuda, neuron, cpu, openvino, tpu, xpu, hpu
+  - **默认值**: auto
+调度器相关配置
+
+--num-scheduler-steps
+  - **描述**: 每次调度器调用的最大前向步骤数。
+  - **默认值**: 1
+
+--multi-step-stream-outputs
+  - **描述**: 如果为False，多步骤将在所有步骤完成后流输出。
+  - **默认值**: True
+
+--scheduler-delay-factor
+  - **描述**: 在调度下一个提示之前应用延迟（延迟因子乘以上一个提示的延迟）。
+  - **默认值**: 0.0
+
+投机解码相关配置
+
+--enable-chunked-prefill
+  - **描述**: 如果设置，预填充请求可以根据max_num_batched_tokens进行分块。
+  - **默认值**: 未指定
+
+--speculative-model
+  - **描述**: 用于投机解码的草稿模型名称。
+  - **默认值**: 未指定
+
+--speculative-model-quantization
+  - **描述**: 用于草稿模型权重量化的量化方法。如果为None，首先检查模型配置文件中的quantization_config属性。如果该属性也为None，则假定模型权重未量化，并使用dtype确定权重的数据类型。
+  - **可能的选择**: aqlm, awq, deepspeedfp, tpu_int8, fp8, fbgemm_fp8, modelopt, marlin, gguf, gptq_marlin_24, gptq_marlin, awq_marlin, gptq, compressed-tensors, bitsandbytes, qqq, hqq, experts_int8, neuron_quant, ipex, quark, moe_wna16, None
+  - **默认值**: None
+
+--num-speculative-tokens
+  - **描述**: 从草稿模型中采样的投机Token数。
+  - **默认值**: 未指定
+
+--speculative-disable-mqa-scorer
+  - **描述**: 如果设置为True，投机解码将禁用MQA评分器并回退到批处理扩展。
+  - **默认值**: False
+
+--speculative-draft-tensor-parallel-size, -spec-draft-tp
+  - **描述**: 投机解码中草稿模型的张量并行副本数。
+  - **默认值**: 未指定
+
+--speculative-max-model-len
+  - **描述**: 草稿模型支持的最大序列长度。超过此长度的序列将跳过投机解码。
+  - **默认值**: 未指定
+
+--speculative-disable-by-batch-size
+  - **描述**: 如果新进请求的数量大于此值，禁用投机解码。
+  - **默认值**: 未指定
+
+--ngram-prompt-lookup-max
+  - **描述**: 投机解码中n-gram提示查找的最大窗口大小。
+  - **默认值**: 未指定
+
+--ngram-prompt-lookup-min
+  - **描述**: 投机解码中n-gram提示查找的最小窗口大小。
+  - **默认值**: 未指定
+
+--spec-decoding-acceptance-method
+  - **描述**: 指定草稿Token验证期间使用的接受方法。支持两种接受例程：1) RejectionSampler 不允许改变草稿Token的接受率；2) TypicalAcceptanceSampler 可配置，允许更高的接受率但质量较低，反之亦然。
+  - **可能的选择**: rejection_sampler, typical_acceptance_sampler
+  - **默认值**: rejection_sampler
+
+--typical-acceptance-sampler-posterior-threshold
+  - **描述**: 设置后验概率的下限阈值，用于接受Token。此阈值由TypicalAcceptanceSampler在投机解码期间进行采样决策。
+  - **默认值**: 0.09
+
+--typical-acceptance-sampler-posterior-alpha
+  - **描述**: 基于熵的阈值的缩放因子，用于接受Token。通常默认为sqrt的--typical-acceptance-sampler-posterior-threshold，即0.3。
+  - **默认值**: 0.3
+
+--disable-logprobs-during-spec-decoding
+  - **描述**: 如果设置为True，投机解码期间不返回Token的对数概率。如果设置为False，根据SamplingParams中的设置返回对数概率。禁用对数概率可以减少延迟，因为会跳过提案采样、目标采样和确定接受Token后的对数概率计算。
+  - **默认值**: True
+
+模型加载相关配置
+--model-loader-extra-config
+  - **描述**: 用于模型加载器的额外配置。这些配置将传递给所选加载格式对应的模型加载器。应为JSON字符串，解析成字典。
+  - **默认值**: 未指定
+
+--ignore-patterns
+  - **描述**: 加载模型时忽略的模式。默认为original/**/*，以避免重复加载llama的检查点。
+  - **默认值**: []
+
+预抢占模式
+
+--preemption-mode
+  - **描述**: 指定引擎在预抢占时的行为模式。
+    recompute: 通过重新计算进行预抢占。
+    swap: 通过块交换进行预抢占。
+  - **默认值**: 未指定
+
+服务模型名称
+
+--served-model-name
+  - **描述**: API中使用的模型名称。如果提供多个名称，服务器将响应任何提供的名称。响应中的模型名称将是列表中的第一个名称。如果未指定，模型名称将与--model参数相同。这些名称还将用于Prometheus指标的model_name标签内容。
+  - **默认值**: 未指定
+
+QLoRA适配器
+
+--qlora-adapter-name-or-path
+  - **描述**: QLoRA适配器的名称或路径。
+  - **默认值**: 未指定
+
+OpenTelemetry跟踪
+--otlp-traces-endpoint
+  - **描述**: OpenTelemetry跟踪数据的目标URL。
+  - **默认值**: 未指定
+
+--collect-detailed-traces
+  - **描述**: 收集指定模块的详细跟踪数据。有效的选择包括model, worker, all。仅在设置了--otlp-traces-endpoint时才有意义。收集详细跟踪数据可能会对性能产生影响。
+  - **默认值**: 未指定
+
+异步输出处理
+
+--disable-async-output-proc
+  - **描述**: 禁用异步输出处理。这可能导致性能降低。
+  - **默认值**: False
+
+调度策略
+
+--scheduling-policy
+  - **描述**: 指定调度策略。
+    fcfs: 先来先服务（默认）。
+    priority: 根据给定的优先级（数值越低越早处理）和到达时间处理请求。
+  - **默认值**: fcfs
+
+覆盖Neuron设备配置
+
+--override-neuron-config
+  - **描述**: 覆盖或设置Neuron设备配置。例如：{"cast_logits_dtype": "bfloat16"}。
+  - **默认值**: 未指定
+覆盖池化配置
+
+--override-pooler-config
+  - **描述**: 覆盖或设置池化模型的池化方法。例如：{"pooling_type": "mean", "normalize": false}。
+  - **默认值**: 未指定
+
+模型编译配置
+
+--compilation-config, -O
+  - **描述**: 模型的torch.compile配置。当它是一个数字（0, 1, 2, 3）时，将被解释为优化级别。
+    0: 默认级别，无优化。
+    1和2: 仅用于内部测试。
+    3: 推荐用于生产。
+  - **其他选项**: 可以使用JSON字符串指定完整的编译配置。例如：-O3等同于-O 3。
+  - **默认值**: 未指定
+
+分布式KV缓存传输配置
+
+--kv-transfer-config
+  - **描述**: 分布式KV缓存传输的配置。应为JSON字符串。
+  - **默认值**: 未指定
+
+工作者类
+
+--worker-cls
+  - **描述**: 分布式执行中使用的工作者类。
+  - **默认值**: auto
+
+生成配置
+
+--generation-config
+  - **描述**: 生成配置的文件夹路径。默认为None，不加载生成配置，使用vLLM的默认值。如果设置为auto，生成配置将从模型路径加载。如果设置为文件夹路径，生成配置将从指定的文件夹路径加载。如果在生成配置中指定了max_new_tokens，则会为所有请求设置服务器范围的输出Token限制。
+  - **默认值**: None
+
+--override-generation-config
+  - **描述**: 以JSON格式覆盖或设置生成配置。例如：{"temperature": 0.5}。如果与--generation-config=auto一起使用，覆盖参数将与模型的默认配置合并。如果generation-config为None，仅使用覆盖参数。
+  - **默认值**: 未指定
+
+睡眠模式
+
+--enable-sleep-mode
+  - **描述**: 启用引擎的睡眠模式（仅支持CUDA平台）。
+  - **默认值**: False
+
+动态计算KV缓存比例
+
+--calculate-kv-scales
+  - **描述**: 当kv-cache-dtype为fp8时，启用动态计算k_scale和v_scale。如果calculate-kv-scales为false，比例将从模型检查点加载（如果可用）。否则，比例默认为1.0。
+  - **默认值**: False
+
+请求日志
+--disable-log-requests
+  - **描述**: 禁用请求日志记录。
+  - **默认值**: False
+
+--max-log-len
+  - **描述**: 日志中打印的提示字符或提示ID号的最大数量。
+  - **默认值**: 无限制
+
+FastAPI文档
+
+--disable-fastapi-docs
+  - **描述**: 禁用FastAPI的OpenAPI模式、Swagger UI和ReDoc端点。
+  - **默认值**: False
+
+提示Token详情
+
+--enable-prompt-tokens-details
+  - **描述**: 如果设置为True，启用prompt_tokens_details在使用中。
+  - **默认值**: False
